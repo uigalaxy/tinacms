@@ -1,6 +1,10 @@
 {
   "name": "root",
   "private": true,
+  "workspaces": [
+    "packages/@tinacms/*",
+    "packages/[!@]*"
+  ],
   "scripts": {
     "lint": "eslint './packages/**/*{.ts,.tsx}'",
     "build": "lerna run build --reject-cycles",

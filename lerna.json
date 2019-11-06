@@ -1,6 +1,8 @@
 {
   "packages": ["packages/@tinacms/*", "packages/[!@]*"],
   "version": "independent",
+  "npmClient": "yarn",
+  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": ["packages/demo/**/*"]
