@@ -26,8 +26,13 @@ export const SSH_KEY_RELATIVE_PATH = '.ssh/id_rsa'
  *
  * @param absolutePath string
  */
-export function openRepo(absolutePath: string) {
+export async function openRepo(absolutePath: string) {
   const repo = git(absolutePath)
+
+  const isRepo = await repo.checkIsRepo()
+  if (!isRepo) {
+    await git.init()
+  }
 
   let options = [
     '-o UserKnownHostsFile=/dev/null',

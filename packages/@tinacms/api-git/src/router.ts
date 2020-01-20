@@ -230,7 +230,8 @@ export function router(config: GitRouterConfig = {}) {
 
   router.post('/push', async (req: any, res: any) => {
     try {
-      await openRepo(REPO_ABSOLUTE_PATH).push()
+      const repo = await openRepo(REPO_ABSOLUTE_PATH)
+      await repo.push()
       res.json({ status: 'success' })
     } catch {
       // TODO: More intelligently respond
@@ -239,8 +240,8 @@ export function router(config: GitRouterConfig = {}) {
     }
   })
 
-  router.post('/reset', (req, res) => {
-    const repo = openRepo(REPO_ABSOLUTE_PATH)
+  router.post('/reset', async (req, res) => {
+    const repo = await openRepo(REPO_ABSOLUTE_PATH)
     const files = req.body.files.map((rel: string) =>
       path.join(CONTENT_ABSOLUTE_PATH, rel)
     )
@@ -258,7 +259,8 @@ export function router(config: GitRouterConfig = {}) {
 
   router.get('/branch', async (req, res) => {
     try {
-      const summary = await openRepo(REPO_ABSOLUTE_PATH).branchLocal()
+      const repo = await openRepo(REPO_ABSOLUTE_PATH)
+      const summary = await repo.branchLocal()
       res.send({ status: 'success', branch: summary.branches[summary.current] })
     } catch {
       // TODO: More intelligently respond
@@ -269,7 +271,8 @@ export function router(config: GitRouterConfig = {}) {
 
   router.get('/branches', async (req, res) => {
     try {
-      const summary = await openRepo(REPO_ABSOLUTE_PATH).branchLocal()
+      const repo = await openRepo(REPO_ABSOLUTE_PATH)
+      const summary = await repo.branchLocal()
       res.send({ status: 'success', branches: summary.all })
     } catch {
       // TODO: More intelligently respond
@@ -280,7 +283,8 @@ export function router(config: GitRouterConfig = {}) {
 
   router.get('/branches/:name', async (req, res) => {
     try {
-      const summary = await openRepo(REPO_ABSOLUTE_PATH).branchLocal()
+      const repo = await openRepo(REPO_ABSOLUTE_PATH)
+      const summary = await repo.branchLocal()
       const branch = summary.branches[req.params.name]
 
       if (!branch) {
