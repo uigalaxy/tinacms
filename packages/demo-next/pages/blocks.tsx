@@ -195,20 +195,21 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
   return (
     <InlineField name={name}>
       {({ input }) => {
-        const data = input.value || []
+        const allData = input.value || []
 
         return (
           <>
-            {data.map((block, index) => {
-              const Block = blocks[block._template]
+            {allData.map((data, index) => {
+              const Block = blocks[data._template]
 
               if (!Block) {
+                console.warn('Unrecognized Block of type:', data._template)
                 return null
               }
 
               const blockName = `${input.name}.${index}`
 
-              return <InlineBlock name={blockName} data={block} block={Block} />
+              return <InlineBlock name={blockName} data={data} block={Block} />
             })}
           </>
         )
