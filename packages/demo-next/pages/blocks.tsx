@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Form } from 'tinacms'
+import { Form, BlockTemplate } from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
 import { FormBuilder, FormBuilderProps } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
@@ -34,6 +34,7 @@ export default function BlocksExample({ jsonFile }) {
           <h1>
             <InlineTextField name="title" />
           </h1>
+          <InlineBlocks name="blocks" blocks={PAGE_BUILDER_BLOCKS} />
         </>
       )}
     </InlineForm>
@@ -144,4 +145,64 @@ function InlineTextField({ name }: InlineTextFieldProps) {
       }}
     </InlineField>
   )
+}
+
+/**
+ * Blocks
+ */
+interface Block {
+  Component: any
+}
+
+interface InlineBlocksProps {
+  name: string
+  blocks: {
+    [key: string]: Block
+  }
+}
+
+function InlineBlocks({ name, blocks }: InlineBlocksProps) {
+  return (
+    <InlineField name={name}>
+      {({ input }) => {
+        const data = input.value || []
+
+        return (
+          <>
+            {data.map(block => {
+              const Block = blocks[block._template]
+
+              if (!Block) {
+                return null
+              }
+
+              return <Block.Component data={block} />
+            })}
+          </>
+        )
+      }}
+    </InlineField>
+  )
+}
+
+/**
+ * Example Blocks
+ */
+const PAGE_BUILDER_BLOCKS = {
+  cta: {
+    Component: CallToActionBlock,
+  },
+  hero: {
+    Component: HeroBlock,
+  },
+}
+
+function CallToActionBlock({ data }) {
+  return (
+    <button onClick={() => window.open(data.url, '_blank')}>{data.text}</button>
+  )
+}
+
+function HeroBlock({ data }) {
+  return <h2>My Hero: {data.text}</h2>
 }
