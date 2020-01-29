@@ -4,19 +4,6 @@ import { useJsonForm } from 'next-tinacms-json'
 import { FormBuilder, FormBuilderProps } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
 
-function EditToggle() {
-  const { status, deactivate, activate } = React.useContext(InlineFormContext)
-
-  return (
-    <button
-      onClick={() => {
-        status === 'active' ? deactivate() : activate()
-      }}
-    >
-      {status === 'active' ? 'Preview' : 'Edit'}
-    </button>
-  )
-}
 /**
  * This is an example page that uses Blocks from Json
  */
@@ -49,6 +36,49 @@ BlocksExample.getInitialProps = async function() {
       data: blocksData.default,
     },
   }
+}
+
+/**
+ * The Blocks Lookup
+ */
+const PAGE_BUILDER_BLOCKS = {
+  cta: {
+    Component: CallToActionBlock,
+  },
+  hero: {
+    Component: HeroBlock,
+  },
+}
+
+function CallToActionBlock({ data }) {
+  return (
+    <button onClick={() => window.open(data.url, '_blank')}>{data.text}</button>
+  )
+}
+
+function HeroBlock() {
+  return (
+    <h2>
+      My Hero: <BlockText name="text" />
+    </h2>
+  )
+}
+
+/**
+ * Toggle
+ */
+function EditToggle() {
+  const { status, deactivate, activate } = React.useContext(InlineFormContext)
+
+  return (
+    <button
+      onClick={() => {
+        status === 'active' ? deactivate() : activate()
+      }}
+    >
+      {status === 'active' ? 'Preview' : 'Edit'}
+    </button>
+  )
 }
 
 /**
@@ -169,14 +199,16 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
 
         return (
           <>
-            {data.map(block => {
+            {data.map((block, index) => {
               const Block = blocks[block._template]
 
               if (!Block) {
                 return null
               }
 
-              return <Block.Component data={block} />
+              const blockName = `${input.name}.${index}`
+
+              return <InlineBlock name={blockName} data={block} block={Block} />
             })}
           </>
         )
@@ -186,23 +218,49 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
 }
 
 /**
- * Example Blocks
+ * InlineBlock
  */
-const PAGE_BUILDER_BLOCKS = {
-  cta: {
-    Component: CallToActionBlock,
-  },
-  hero: {
-    Component: HeroBlock,
-  },
+interface InlineBlockProps {
+  name: string
+  data: any
+  block: Block
 }
-
-function CallToActionBlock({ data }) {
+function InlineBlock({ name, data, block }: InlineBlockProps) {
   return (
-    <button onClick={() => window.open(data.url, '_blank')}>{data.text}</button>
+    <InlineBlockContext.Provider value={{ name }}>
+      <block.Component data={data} />
+    </InlineBlockContext.Provider>
   )
 }
 
-function HeroBlock({ data }) {
-  return <h2>My Hero: {data.text}</h2>
+const InlineBlockContext = React.createContext<any>(null)
+
+interface BlockFieldProps {
+  name: string
+  children: any
+}
+
+function BlockField({ name, children }: BlockFieldProps) {
+  const block = React.useContext(InlineBlockContext)
+  const fieldName = `${block.name}.${name}`
+  return <InlineField name={fieldName}>{children}</InlineField>
+}
+
+/**
+ * InlineTextField
+ */
+interface BlockText {
+  name: string
+}
+function BlockText({ name }: InlineTextFieldProps) {
+  return (
+    <BlockField name={name}>
+      {({ input, status }) => {
+        if (status === 'active') {
+          return <input type="text" {...input} />
+        }
+        return <>{input.value}</>
+      }}
+    </BlockField>
+  )
 }
