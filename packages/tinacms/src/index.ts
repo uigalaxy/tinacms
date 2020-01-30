@@ -58,6 +58,8 @@ export { FieldMeta } from './plugins/fields/wrapFieldWithMeta'
 
 // Modal Components
 export * from './components/modals/ModalProvider'
+export * from './components/modals/ModalPopup'
+export * from './components/modals/ModalFullscreen'
 
 // Form Actions Components
 export { ActionButton } from './components/ActionsMenu'

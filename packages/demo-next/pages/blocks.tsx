@@ -1,8 +1,18 @@
 import * as React from 'react'
-import { Form, BlockTemplate } from 'tinacms'
+import {
+  Form,
+  BlockTemplate,
+  ModalActions,
+  ModalHeader,
+  ModalBody,
+  Modal,
+  ModalProvider,
+  ModalPopup,
+} from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
-import { FormBuilder } from '@tinacms/form-builder'
+import { FormBuilder, FieldsBuilder } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
+import { Button } from '../../@tinacms/styles/build/index.js'
 
 /**
  * This is an example page that uses Blocks from Json
@@ -13,14 +23,16 @@ export default function BlocksExample({ jsonFile }) {
   if (!form) return null
 
   return (
-    <InlineForm form={form}>
-      <EditToggle />
-      <DiscardChanges />
-      <h1>
-        <InlineTextField name="title" />
-      </h1>
-      <InlineBlocks name="blocks" blocks={PAGE_BUILDER_BLOCKS} />
-    </InlineForm>
+    <ModalProvider>
+      <InlineForm form={form}>
+        <EditToggle />
+        <DiscardChanges />
+        <h1>
+          <InlineTextField name="title" />
+        </h1>
+        <InlineBlocks name="blocks" blocks={PAGE_BUILDER_BLOCKS} />
+      </InlineForm>
+    </ModalProvider>
   )
 }
 
@@ -40,7 +52,10 @@ const cta_template: BlockTemplate = {
   label: 'Call to Action',
   defaultItem: { url: '', text: 'Signup!' },
   key: undefined,
-  fields: [],
+  fields: [
+    { name: 'text', label: 'Text', component: 'text' },
+    { name: 'url', label: 'URL', component: 'text' },
+  ],
 }
 
 function CallToActionBlock({ data, index }) {
@@ -102,6 +117,8 @@ function BlocksControls({ children, index }) {
   )
   const isFirst = index === 0
   const isLast = index === count - 1
+
+  const [open, setOpen] = React.useState(false)
   return (
     <div
       style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
@@ -130,8 +147,39 @@ function BlocksControls({ children, index }) {
       <button onClick={() => move(index, index + 1)} disabled={isLast}>
         Down
       </button>
+      <button onClick={() => setOpen(p => !p)}>Settings</button>
+      {open && (
+        <BlockSettings
+          template={blocks.cta.template}
+          close={() => setOpen(false)}
+        />
+      )}
       {children}
     </div>
+  )
+}
+
+function BlockSettings({ template, close }: any) {
+  const { form } = React.useContext(InlineFormContext)
+  const { name } = React.useContext(InlineBlockContext)
+
+  const fields = template.fields.map((subField: any) => ({
+    ...subField,
+    name: `${name}.${subField.name}`,
+  }))
+
+  return (
+    <Modal>
+      <ModalPopup>
+        <ModalHeader close={close}>Settings</ModalHeader>
+        <ModalBody>
+          <FieldsBuilder form={form} fields={fields} />
+        </ModalBody>
+        <ModalActions>
+          <Button onClick={close}>Cancel</Button>
+        </ModalActions>
+      </ModalPopup>
+    </Modal>
   )
 }
 
