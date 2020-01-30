@@ -1,7 +1,7 @@
 {
   "name": "Kendall",
   "body": "## Encyclopaedia galactica something incredible is waiting to be known a billion trillion venture trillion extraordinary claims require extraordinary evidence?",
-  "title": "Page Builder test",
+  "title": "Page Builder Example",
   "blocks": [
     {
       "_template": "hero",
@@ -9,7 +9,8 @@
     },
     {
       "_template": "cta",
-      "text": "Log In"
+      "text": "Log In",
+      "url": "www.google.com"
     }
   ]
 }

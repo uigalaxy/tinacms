@@ -50,17 +50,26 @@ const PAGE_BUILDER_BLOCKS = {
   },
 }
 
-function CallToActionBlock({ data }) {
+function CallToActionBlock({ data, index }) {
   return (
-    <button onClick={() => window.open(data.url, '_blank')}>{data.text}</button>
+    <BlocksControls index={index}>
+      <button
+        onClick={() => window.open(data.url, '_blank')}
+        style={{ display: 'block', background: 'pink' }}
+      >
+        {data.text}
+      </button>
+    </BlocksControls>
   )
 }
 
-function HeroBlock() {
+function HeroBlock({ index }) {
   return (
-    <h2>
-      My Hero: <BlockText name="text" />
-    </h2>
+    <BlocksControls index={index}>
+      <h2>
+        My Hero: <BlockText name="text" />
+      </h2>
+    </BlocksControls>
   )
 }
 
@@ -191,14 +200,34 @@ interface InlineBlocksProps {
   }
 }
 
+interface InlineBlocksActions {
+  insert(index: number, data: any): void
+  move(froom: number, to: number): void
+  remove(index: number): void
+}
+
+const InlineBlocksActions = React.createContext<InlineBlocksActions>(null)
+
 function InlineBlocks({ name, blocks }: InlineBlocksProps) {
   return (
     <InlineField name={name}>
-      {({ input }) => {
+      {({ input, form }) => {
         const allData = input.value || []
 
+        const move = (from: number, to: number) => {
+          form.mutators.move(name, from, to)
+        }
+
+        const remove = (index: number) => {
+          form.mutators.remove(name, index)
+        }
+
+        const insert = (block: any, index: number) => {
+          form.mutators.insert(name, index, block)
+        }
+
         return (
-          <>
+          <InlineBlocksActions.Provider value={{ insert, move, remove }}>
             {allData.map((data, index) => {
               const Block = blocks[data._template]
 
@@ -209,9 +238,16 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
 
               const blockName = `${input.name}.${index}`
 
-              return <InlineBlock name={blockName} data={data} block={Block} />
+              return (
+                <InlineBlock
+                  index={index}
+                  name={blockName}
+                  data={data}
+                  block={Block}
+                />
+              )
             })}
-          </>
+          </InlineBlocksActions.Provider>
         )
       }}
     </InlineField>
@@ -222,14 +258,15 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
  * InlineBlock
  */
 interface InlineBlockProps {
+  index: number
   name: string
   data: any
   block: Block
 }
-function InlineBlock({ name, data, block }: InlineBlockProps) {
+function InlineBlock({ name, data, block, index }: InlineBlockProps) {
   return (
     <InlineBlockContext.Provider value={{ name }}>
-      <block.Component data={data} />
+      <block.Component data={data} index={index} />
     </InlineBlockContext.Provider>
   )
 }
@@ -263,5 +300,22 @@ function BlockText({ name }: InlineTextFieldProps) {
         return <>{input.value}</>
       }}
     </BlockField>
+  )
+}
+
+function BlocksControls({ children, index }) {
+  const { insert, move, remove } = React.useContext(InlineBlocksActions)
+  return (
+    <div
+      style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
+    >
+      <button onClick={() => insert(index + 1, { _template: 'cta' })}>
+        Add
+      </button>
+      <button onClick={() => remove(index)}>Remove</button>
+      <button onClick={() => move(index, index - 1)}>Up</button>
+      <button onClick={() => move(index, index + 1)}>Down</button>
+      {children}
+    </div>
   )
 }
