@@ -196,7 +196,7 @@ BlocksExample.getInitialProps = async function() {
   const blocksData = await import(`../data/blocks.json`)
   return {
     jsonFile: {
-      fileRelativePath: `data/index.json`,
+      fileRelativePath: `data/blocks.json`,
       data: blocksData.default,
     },
   }
