@@ -9,6 +9,11 @@
     },
     {
       "_template": "cta",
+      "url": "",
+      "text": "Signup!"
+    },
+    {
+      "_template": "cta",
       "text": "Log In",
       "url": "www.google.com"
     }

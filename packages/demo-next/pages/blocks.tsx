@@ -36,12 +36,30 @@ BlocksExample.getInitialProps = async function() {
 /**
  * The Blocks Lookup
  */
+const cta_template: BlockTemplate = {
+  type: 'cta',
+  label: 'Call to Action',
+  defaultItem: { url: '', text: 'Signup!' },
+  key: undefined,
+  fields: [],
+}
+
+const hero_template: BlockTemplate = {
+  type: 'hero',
+  label: 'Hero',
+  defaultItem: { text: 'Spiderman' },
+  key: undefined,
+  fields: [],
+}
+
 const PAGE_BUILDER_BLOCKS = {
   cta: {
     Component: CallToActionBlock,
+    template: cta_template,
   },
   hero: {
     Component: HeroBlock,
+    template: hero_template,
   },
 }
 
@@ -191,6 +209,7 @@ function InlineTextField({ name }: InlineTextFieldProps) {
  */
 interface Block {
   Component: any
+  template: BlockTemplate
 }
 
 interface InlineBlocksProps {
@@ -204,6 +223,9 @@ interface InlineBlocksActions {
   insert(index: number, data: any): void
   move(froom: number, to: number): void
   remove(index: number): void
+  blocks: {
+    [key: string]: Block
+  }
 }
 
 const InlineBlocksActions = React.createContext<InlineBlocksActions>(null)
@@ -222,12 +244,14 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
           form.mutators.remove(name, index)
         }
 
-        const insert = (block: any, index: number) => {
+        const insert = (index: number, block: any) => {
           form.mutators.insert(name, index, block)
         }
 
         return (
-          <InlineBlocksActions.Provider value={{ insert, move, remove }}>
+          <InlineBlocksActions.Provider
+            value={{ insert, move, remove, blocks }}
+          >
             {allData.map((data, index) => {
               const Block = blocks[data._template]
 
@@ -304,14 +328,28 @@ function BlockText({ name }: InlineTextFieldProps) {
 }
 
 function BlocksControls({ children, index }) {
-  const { insert, move, remove } = React.useContext(InlineBlocksActions)
+  const { insert, move, remove, blocks } = React.useContext(InlineBlocksActions)
   return (
     <div
       style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
     >
-      <button onClick={() => insert(index + 1, { _template: 'cta' })}>
-        Add
-      </button>
+      {Object.entries(blocks)
+        .map(([, block]) => block.template)
+        .map(template => {
+          return (
+            <button
+              onClick={() => {
+                console.log(template)
+                insert(index + 1, {
+                  _template: template.type,
+                  ...template.defaultItem,
+                })
+              }}
+            >
+              Add {template.label}
+            </button>
+          )
+        })}
       <button onClick={() => remove(index)}>Remove</button>
       <button onClick={() => move(index, index - 1)}>Up</button>
       <button onClick={() => move(index, index + 1)}>Down</button>
