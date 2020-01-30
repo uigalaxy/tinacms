@@ -112,6 +112,7 @@ const PAGE_BUILDER_BLOCKS = {
  * The controls for editing blocks.
  */
 function BlocksControls({ children, index }) {
+  const { status } = React.useContext(InlineFormContext)
   const { insert, move, remove, blocks, count } = React.useContext(
     InlineBlocksContext
   )
@@ -119,6 +120,10 @@ function BlocksControls({ children, index }) {
   const isLast = index === count - 1
 
   const [open, setOpen] = React.useState(false)
+
+  if (status === 'inactive') {
+    return children
+  }
   return (
     <div
       style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
