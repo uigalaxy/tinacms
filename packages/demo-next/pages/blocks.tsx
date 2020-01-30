@@ -3,7 +3,6 @@ import { Form, BlockTemplate } from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
 import { FormBuilder } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
-import { formatWithValidation } from 'next/dist/next-server/lib/utils'
 
 /**
  * This is an example page that uses Blocks from Json
@@ -25,18 +24,16 @@ export default function BlocksExample({ jsonFile }) {
   )
 }
 
-BlocksExample.getInitialProps = async function() {
-  const blocksData = await import(`../data/blocks.json`)
-  return {
-    jsonFile: {
-      fileRelativePath: `data/index.json`,
-      data: blocksData.default,
-    },
-  }
+/**
+ * Blocks consist of a `template` and a `Component`
+ */
+interface Block {
+  Component: any
+  template: BlockTemplate
 }
 
 /**
- * Call To Actioon Template + Component
+ * CallToAction template + Component
  */
 const cta_template: BlockTemplate = {
   type: 'cta',
@@ -60,7 +57,7 @@ function CallToActionBlock({ data, index }) {
 }
 
 /**
- * Hero Block Template + Component
+ * Hero template + Component
  */
 const hero_template: BlockTemplate = {
   type: 'hero',
@@ -81,7 +78,8 @@ function HeroBlock({ index }) {
 }
 
 /**
- * Blocks Lookup
+ * This is the Blocks lookup that was passed to `<InlineBlocks>` in the
+ * main `BlocksExample` component.
  */
 const PAGE_BUILDER_BLOCKS = {
   cta: {
@@ -94,9 +92,13 @@ const PAGE_BUILDER_BLOCKS = {
   },
 }
 
+/**
+ * Each of the Block.Components had this wrapping their content. It provides
+ * The controls for editing blocks.
+ */
 function BlocksControls({ children, index }) {
   const { insert, move, remove, blocks, count } = React.useContext(
-    InlineBlocksActions
+    InlineBlocksContext
   )
   const isFirst = index === 0
   const isLast = index === count - 1
@@ -134,8 +136,18 @@ function BlocksControls({ children, index }) {
 }
 
 /**
- * EVERYTHING BELOW HERE IS INTERNAL
+ * EVERYTHING BELOW HERE IS NOT IMPORTANT TO UNDERSTANDING BLOCKS
  */
+
+BlocksExample.getInitialProps = async function() {
+  const blocksData = await import(`../data/blocks.json`)
+  return {
+    jsonFile: {
+      fileRelativePath: `data/index.json`,
+      data: blocksData.default,
+    },
+  }
+}
 
 /**
  * Toggle
@@ -272,10 +284,6 @@ function InlineTextField({ name }: InlineTextFieldProps) {
 /**
  * Blocks
  */
-interface Block {
-  Component: any
-  template: BlockTemplate
-}
 
 interface InlineBlocksProps {
   name: string
@@ -294,7 +302,7 @@ interface InlineBlocksActions {
   }
 }
 
-const InlineBlocksActions = React.createContext<InlineBlocksActions>(null)
+const InlineBlocksContext = React.createContext<InlineBlocksActions>(null)
 
 function InlineBlocks({ name, blocks }: InlineBlocksProps) {
   return (
@@ -315,7 +323,7 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
         }
 
         return (
-          <InlineBlocksActions.Provider
+          <InlineBlocksContext.Provider
             value={{ insert, move, remove, blocks, count: allData.length }}
           >
             {allData.map((data, index) => {
@@ -337,7 +345,7 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
                 />
               )
             })}
-          </InlineBlocksActions.Provider>
+          </InlineBlocksContext.Provider>
         )
       }}
     </InlineField>
