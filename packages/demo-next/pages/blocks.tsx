@@ -220,6 +220,7 @@ interface InlineBlocksProps {
 }
 
 interface InlineBlocksActions {
+  count: number
   insert(index: number, data: any): void
   move(froom: number, to: number): void
   remove(index: number): void
@@ -250,7 +251,7 @@ function InlineBlocks({ name, blocks }: InlineBlocksProps) {
 
         return (
           <InlineBlocksActions.Provider
-            value={{ insert, move, remove, blocks }}
+            value={{ insert, move, remove, blocks, count: allData.length }}
           >
             {allData.map((data, index) => {
               const Block = blocks[data._template]
@@ -328,7 +329,11 @@ function BlockText({ name }: InlineTextFieldProps) {
 }
 
 function BlocksControls({ children, index }) {
-  const { insert, move, remove, blocks } = React.useContext(InlineBlocksActions)
+  const { insert, move, remove, blocks, count } = React.useContext(
+    InlineBlocksActions
+  )
+  const isFirst = index === 0
+  const isLast = index === count - 1
   return (
     <div
       style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
@@ -351,8 +356,12 @@ function BlocksControls({ children, index }) {
           )
         })}
       <button onClick={() => remove(index)}>Remove</button>
-      <button onClick={() => move(index, index - 1)}>Up</button>
-      <button onClick={() => move(index, index + 1)}>Down</button>
+      <button onClick={() => move(index, index - 1)} disabled={isFirst}>
+        Up
+      </button>
+      <button onClick={() => move(index, index + 1)} disabled={isLast}>
+        Down
+      </button>
       {children}
     </div>
   )
