@@ -86,6 +86,49 @@ function HeroBlock({ index }) {
   )
 }
 
+function BlocksControls({ children, index }) {
+  const { insert, move, remove, blocks, count } = React.useContext(
+    InlineBlocksActions
+  )
+  const isFirst = index === 0
+  const isLast = index === count - 1
+  return (
+    <div
+      style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
+    >
+      {Object.entries(blocks)
+        .map(([, block]) => block.template)
+        .map(template => {
+          return (
+            <button
+              onClick={() => {
+                console.log(template)
+                insert(index + 1, {
+                  _template: template.type,
+                  ...template.defaultItem,
+                })
+              }}
+            >
+              Add {template.label}
+            </button>
+          )
+        })}
+      <button onClick={() => remove(index)}>Remove</button>
+      <button onClick={() => move(index, index - 1)} disabled={isFirst}>
+        Up
+      </button>
+      <button onClick={() => move(index, index + 1)} disabled={isLast}>
+        Down
+      </button>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * EVERYTHING BELOW HERE IS INTERNAL
+ */
+
 /**
  * Toggle
  */
@@ -325,44 +368,5 @@ function BlockText({ name }: InlineTextFieldProps) {
         return <>{input.value}</>
       }}
     </BlockField>
-  )
-}
-
-function BlocksControls({ children, index }) {
-  const { insert, move, remove, blocks, count } = React.useContext(
-    InlineBlocksActions
-  )
-  const isFirst = index === 0
-  const isLast = index === count - 1
-  return (
-    <div
-      style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
-    >
-      {Object.entries(blocks)
-        .map(([, block]) => block.template)
-        .map(template => {
-          return (
-            <button
-              onClick={() => {
-                console.log(template)
-                insert(index + 1, {
-                  _template: template.type,
-                  ...template.defaultItem,
-                })
-              }}
-            >
-              Add {template.label}
-            </button>
-          )
-        })}
-      <button onClick={() => remove(index)}>Remove</button>
-      <button onClick={() => move(index, index - 1)} disabled={isFirst}>
-        Up
-      </button>
-      <button onClick={() => move(index, index + 1)} disabled={isLast}>
-        Down
-      </button>
-      {children}
-    </div>
   )
 }
