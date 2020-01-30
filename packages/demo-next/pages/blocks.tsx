@@ -13,17 +13,12 @@ export default function BlocksExample({ jsonFile }) {
   if (!form) return null
 
   return (
-    // TODO: Allow regular children
     <InlineForm form={form}>
-      {() => (
-        <>
-          <EditToggle />
-          <h1>
-            <InlineTextField name="title" />
-          </h1>
-          <InlineBlocks name="blocks" blocks={PAGE_BUILDER_BLOCKS} />
-        </>
-      )}
+      <EditToggle />
+      <h1>
+        <InlineTextField name="title" />
+      </h1>
+      <InlineBlocks name="blocks" blocks={PAGE_BUILDER_BLOCKS} />
     </InlineForm>
   )
 }
@@ -97,11 +92,13 @@ function EditToggle() {
  */
 interface InlineFormProps {
   form: Form
-  children(
-    props: FormRenderProps &
-      Pick<InlineFormState, 'activate' | 'deactivate' | 'status'>
-  ): any
+  children: React.ReactElement | React.ReactElement[] | InlineFormRenderChild
 }
+
+type InlineFormRenderChild = (
+  props: FormRenderProps &
+    Pick<InlineFormState, 'activate' | 'deactivate' | 'status'>
+) => any
 
 interface InlineFormState {
   form: Form
@@ -126,13 +123,16 @@ function InlineForm({ form, children }: InlineFormProps) {
   return (
     <InlineFormContext.Provider value={inlineFormState}>
       <FormBuilder form={form}>
-        {formProps =>
+        {formProps => {
+          if (typeof children !== 'function') {
+            return children
+          }
           // @ts-ignore
-          children({
+          return children({
             ...inlineFormState,
             ...formProps,
           })
-        }
+        }}
       </FormBuilder>
     </InlineFormContext.Provider>
   )
