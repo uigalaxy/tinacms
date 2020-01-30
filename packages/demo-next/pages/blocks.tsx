@@ -3,6 +3,7 @@ import { Form, BlockTemplate } from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
 import { FormBuilder } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
+import { formatWithValidation } from 'next/dist/next-server/lib/utils'
 
 /**
  * This is an example page that uses Blocks from Json
@@ -15,6 +16,7 @@ export default function BlocksExample({ jsonFile }) {
   return (
     <InlineForm form={form}>
       <EditToggle />
+      <DiscardChanges />
       <h1>
         <InlineTextField name="title" />
       </h1>
@@ -148,6 +150,20 @@ function EditToggle() {
       }}
     >
       {status === 'active' ? 'Preview' : 'Edit'}
+    </button>
+  )
+}
+
+function DiscardChanges() {
+  const { form } = React.useContext(InlineFormContext)
+
+  return (
+    <button
+      onClick={() => {
+        form.finalForm.reset()
+      }}
+    >
+      Discard Changes
     </button>
   )
 }
