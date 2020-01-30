@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Form, BlockTemplate } from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
-import { FormBuilder, FormBuilderProps } from '@tinacms/form-builder'
+import { FormBuilder } from '@tinacms/form-builder'
 import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
 
 /**
@@ -34,7 +34,7 @@ BlocksExample.getInitialProps = async function() {
 }
 
 /**
- * The Blocks Lookup
+ * Call To Actioon Template + Component
  */
 const cta_template: BlockTemplate = {
   type: 'cta',
@@ -42,25 +42,6 @@ const cta_template: BlockTemplate = {
   defaultItem: { url: '', text: 'Signup!' },
   key: undefined,
   fields: [],
-}
-
-const hero_template: BlockTemplate = {
-  type: 'hero',
-  label: 'Hero',
-  defaultItem: { text: 'Spiderman' },
-  key: undefined,
-  fields: [],
-}
-
-const PAGE_BUILDER_BLOCKS = {
-  cta: {
-    Component: CallToActionBlock,
-    template: cta_template,
-  },
-  hero: {
-    Component: HeroBlock,
-    template: hero_template,
-  },
 }
 
 function CallToActionBlock({ data, index }) {
@@ -76,6 +57,17 @@ function CallToActionBlock({ data, index }) {
   )
 }
 
+/**
+ * Hero Block Template + Component
+ */
+const hero_template: BlockTemplate = {
+  type: 'hero',
+  label: 'Hero',
+  defaultItem: { text: 'Spiderman' },
+  key: undefined,
+  fields: [],
+}
+
 function HeroBlock({ index }) {
   return (
     <BlocksControls index={index}>
@@ -84,6 +76,20 @@ function HeroBlock({ index }) {
       </h2>
     </BlocksControls>
   )
+}
+
+/**
+ * Blocks Lookup
+ */
+const PAGE_BUILDER_BLOCKS = {
+  cta: {
+    Component: CallToActionBlock,
+    template: cta_template,
+  },
+  hero: {
+    Component: HeroBlock,
+    template: hero_template,
+  },
 }
 
 function BlocksControls({ children, index }) {
