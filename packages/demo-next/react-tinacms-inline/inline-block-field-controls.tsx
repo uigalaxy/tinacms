@@ -1,10 +1,12 @@
 import * as React from 'react'
+import styled from 'styled-components'
 import {
   ModalActions,
   ModalHeader,
   ModalBody,
   Modal,
   ModalPopup,
+  BlockTemplate,
 } from 'tinacms'
 import { FieldsBuilder } from '@tinacms/form-builder'
 import { Button } from '../../@tinacms/styles/build/index.js'
@@ -26,58 +28,86 @@ export function BlocksControls({ children, index }) {
   const isFirst = index === 0
   const isLast = index === count - 1
 
-  const [open, setOpen] = React.useState(false)
+  const template = blocks.cta.template
+  const removeBlock = () => remove(index)
+  const moveBlockUp = () => move(index, index - 1)
+  const moveBlockDown = () => move(index, index + 1)
 
   if (status === 'inactive') {
     return children
   }
+
   return (
-    <div
-      style={{ border: '1px solid green', maxWidth: '500px', margin: '16px' }}
-    >
-      {Object.entries(blocks)
-        .map(([, block]) => block.template)
-        .map(template => {
-          return (
-            <button
-              onClick={() => {
-                console.log(template)
-                insert(index + 1, {
-                  _template: template.type,
-                  ...template.defaultItem,
-                })
-              }}
-            >
-              Add {template.label}
-            </button>
-          )
-        })}
-      <button onClick={() => remove(index)}>Remove</button>
-      <button onClick={() => move(index, index - 1)} disabled={isFirst}>
+    <BlockWrapper>
+      <AddBlockMenu
+        addBlock={block => insert(index + 1, block)}
+        templates={Object.entries(blocks).map(([, block]) => block.template)}
+      />
+      <button onClick={removeBlock}>Remove</button>
+      <button onClick={moveBlockUp} disabled={isFirst}>
         Up
       </button>
-      <button onClick={() => move(index, index + 1)} disabled={isLast}>
+      <button onClick={moveBlockDown} disabled={isLast}>
         Down
       </button>
-      <button onClick={() => setOpen(p => !p)}>Settings</button>
-      {open && (
-        <BlockSettings
-          template={blocks.cta.template}
-          close={() => setOpen(false)}
-        />
-      )}
+      <BlockSettings template={template} />
+
       {children}
-    </div>
+    </BlockWrapper>
   )
 }
 
-function BlockSettings({ template, close }: any) {
-  const { form } = React.useContext(InlineFormContext)
-  const { name } = React.useContext(InlineBlockContext)
+const BlockWrapper = styled.div`
+  border: '1px solid green';
+  maxwidth: '500px';
+  margin: '16px';
+`
 
-  const fields = template.fields.map((subField: any) => ({
-    ...subField,
-    name: `${name}.${subField.name}`,
+interface AddBlockMenu {
+  addBlock(data: any): void
+  templates: BlockTemplate[]
+}
+
+function AddBlockMenu({ templates, addBlock }: AddBlockMenu) {
+  return (
+    <>
+      {templates.map(template => {
+        return (
+          <button
+            onClick={() => {
+              addBlock({
+                _template: template.type,
+                ...template.defaultItem,
+              })
+            }}
+          >
+            Add {template.label}
+          </button>
+        )
+      })}
+    </>
+  )
+}
+
+function BlockSettings({ template }) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <>
+      <button onClick={() => setOpen(p => !p)}>Settings</button>
+      {open && (
+        <BlockSettingsModal template={template} close={() => setOpen(false)} />
+      )}
+    </>
+  )
+}
+
+function BlockSettingsModal({ template, close }: any) {
+  const { form } = React.useContext(InlineFormContext)
+  const { name: blockName } = React.useContext(InlineBlockContext)
+
+  const fields = template.fields.map((field: any) => ({
+    ...field,
+    name: `${blockName}.${field.name}`,
   }))
 
   return (
