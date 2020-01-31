@@ -3,20 +3,19 @@ import { Form } from 'tinacms'
 import { FormBuilder } from '@tinacms/form-builder'
 import { FormRenderProps } from 'react-final-form'
 
-/**
- * InlineForm
- *
- * Sets up a FinaForm context and tracks the state of the form.
- */
 export interface InlineFormProps {
   form: Form
   children: React.ReactElement | React.ReactElement[] | InlineFormRenderChild
 }
 
-export type InlineFormRenderChild = (
-  props: FormRenderProps &
-    Pick<InlineFormState, 'activate' | 'deactivate' | 'status'>
-) => any
+export interface InlineFormRenderChild {
+  (props: InlineFormRendeChildOptions):
+    | React.ReactElement
+    | React.ReactElement[]
+}
+
+export type InlineFormRendeChildOptions = InlineFormState &
+  Omit<FormRenderProps<any>, 'form'>
 
 export interface InlineFormState {
   form: Form
@@ -24,6 +23,7 @@ export interface InlineFormState {
   activate(): void
   deactivate(): void
 }
+
 export type InlineFormStatus = 'active' | 'inactive'
 
 export function InlineForm({ form, children }: InlineFormProps) {
@@ -41,14 +41,14 @@ export function InlineForm({ form, children }: InlineFormProps) {
   return (
     <InlineFormContext.Provider value={inlineFormState}>
       <FormBuilder form={form}>
-        {formProps => {
+        {({ form, ...formProps }) => {
           if (typeof children !== 'function') {
             return children
           }
-          // @ts-ignore
+
           return children({
-            ...inlineFormState,
             ...formProps,
+            ...inlineFormState,
           })
         }}
       </FormBuilder>
@@ -56,6 +56,4 @@ export function InlineForm({ form, children }: InlineFormProps) {
   )
 }
 
-export const InlineFormContext = React.createContext<InlineFormState | null>(
-  null
-)
+export const InlineFormContext = React.createContext<InlineFormState>(null)
