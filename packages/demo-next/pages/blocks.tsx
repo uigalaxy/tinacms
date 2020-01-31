@@ -1,6 +1,5 @@
 import * as React from 'react'
 import {
-  Form,
   BlockTemplate,
   ModalActions,
   ModalHeader,
@@ -10,9 +9,17 @@ import {
   ModalPopup,
 } from 'tinacms'
 import { useJsonForm } from 'next-tinacms-json'
-import { FormBuilder, FieldsBuilder } from '@tinacms/form-builder'
-import { Field, FormRenderProps, FieldRenderProps } from 'react-final-form'
+import { FieldsBuilder } from '@tinacms/form-builder'
 import { Button } from '../../@tinacms/styles/build/index.js'
+import {
+  InlineForm,
+  InlineTextField,
+  InlineBlocks,
+  BlockText,
+  InlineFormContext,
+  InlineBlocksContext,
+  InlineBlockContext,
+} from '../react-tinacms-inline'
 
 /**
  * This is an example page that uses Blocks from Json
@@ -34,14 +41,6 @@ export default function BlocksExample({ jsonFile }) {
       </InlineForm>
     </ModalProvider>
   )
-}
-
-/**
- * Blocks consist of a `template` and a `Component`
- */
-interface Block {
-  Component: any
-  template: BlockTemplate
 }
 
 /**
@@ -230,226 +229,5 @@ function DiscardChanges() {
     >
       Discard Changes
     </button>
-  )
-}
-
-/**
- * InlineForm
- *
- * Sets up a FinaForm context and tracks the state of the form.
- */
-interface InlineFormProps {
-  form: Form
-  children: React.ReactElement | React.ReactElement[] | InlineFormRenderChild
-}
-
-type InlineFormRenderChild = (
-  props: FormRenderProps &
-    Pick<InlineFormState, 'activate' | 'deactivate' | 'status'>
-) => any
-
-interface InlineFormState {
-  form: Form
-  status: InlineFormStatus
-  activate(): void
-  deactivate(): void
-}
-type InlineFormStatus = 'active' | 'inactive'
-
-function InlineForm({ form, children }: InlineFormProps) {
-  const [status, setStatus] = React.useState<InlineFormStatus>('inactive')
-
-  const inlineFormState = React.useMemo(() => {
-    return {
-      form,
-      status,
-      activate: () => setStatus('active'),
-      deactivate: () => setStatus('inactive'),
-    }
-  }, [form, status])
-
-  return (
-    <InlineFormContext.Provider value={inlineFormState}>
-      <FormBuilder form={form}>
-        {formProps => {
-          if (typeof children !== 'function') {
-            return children
-          }
-          // @ts-ignore
-          return children({
-            ...inlineFormState,
-            ...formProps,
-          })
-        }}
-      </FormBuilder>
-    </InlineFormContext.Provider>
-  )
-}
-
-const InlineFormContext = React.createContext<InlineFormState | null>(null)
-
-/**
- *
- */
-interface InlineFieldProps {
-  name: string
-  children(fieldProps: InlineFieldRenderProps): React.ReactElement
-}
-
-interface InlineFieldRenderProps<V = any>
-  extends Partial<FieldRenderProps<V>>,
-    InlineFormState {}
-
-function InlineField({ name, children }: InlineFieldProps) {
-  const formState = React.useContext(InlineFormContext)
-
-  return (
-    <Field name={name}>
-      {fieldProps => {
-        return children({
-          ...fieldProps,
-          ...formState,
-        })
-      }}
-    </Field>
-  )
-}
-
-/**
- * InlineTextField
- */
-interface InlineTextFieldProps {
-  name: string
-}
-function InlineTextField({ name }: InlineTextFieldProps) {
-  return (
-    <InlineField name={name}>
-      {({ input, status }) => {
-        if (status === 'active') {
-          return <input type="text" {...input} />
-        }
-        return <>{input.value}</>
-      }}
-    </InlineField>
-  )
-}
-
-/**
- * Blocks
- */
-
-interface InlineBlocksProps {
-  name: string
-  blocks: {
-    [key: string]: Block
-  }
-}
-
-interface InlineBlocksActions {
-  count: number
-  insert(index: number, data: any): void
-  move(froom: number, to: number): void
-  remove(index: number): void
-  blocks: {
-    [key: string]: Block
-  }
-}
-
-const InlineBlocksContext = React.createContext<InlineBlocksActions>(null)
-
-function InlineBlocks({ name, blocks }: InlineBlocksProps) {
-  return (
-    <InlineField name={name}>
-      {({ input, form }) => {
-        const allData = input.value || []
-
-        const move = (from: number, to: number) => {
-          form.mutators.move(name, from, to)
-        }
-
-        const remove = (index: number) => {
-          form.mutators.remove(name, index)
-        }
-
-        const insert = (index: number, block: any) => {
-          form.mutators.insert(name, index, block)
-        }
-
-        return (
-          <InlineBlocksContext.Provider
-            value={{ insert, move, remove, blocks, count: allData.length }}
-          >
-            {allData.map((data, index) => {
-              const Block = blocks[data._template]
-
-              if (!Block) {
-                console.warn('Unrecognized Block of type:', data._template)
-                return null
-              }
-
-              const blockName = `${input.name}.${index}`
-
-              return (
-                <InlineBlock
-                  index={index}
-                  name={blockName}
-                  data={data}
-                  block={Block}
-                />
-              )
-            })}
-          </InlineBlocksContext.Provider>
-        )
-      }}
-    </InlineField>
-  )
-}
-
-/**
- * InlineBlock
- */
-interface InlineBlockProps {
-  index: number
-  name: string
-  data: any
-  block: Block
-}
-function InlineBlock({ name, data, block, index }: InlineBlockProps) {
-  return (
-    <InlineBlockContext.Provider value={{ name }}>
-      <block.Component data={data} index={index} />
-    </InlineBlockContext.Provider>
-  )
-}
-
-const InlineBlockContext = React.createContext<any>(null)
-
-interface BlockFieldProps {
-  name: string
-  children: any
-}
-
-function BlockField({ name, children }: BlockFieldProps) {
-  const block = React.useContext(InlineBlockContext)
-  const fieldName = `${block.name}.${name}`
-  return <InlineField name={fieldName}>{children}</InlineField>
-}
-
-/**
- * InlineTextField
- */
-interface BlockText {
-  name: string
-}
-function BlockText({ name }: InlineTextFieldProps) {
-  return (
-    <BlockField name={name}>
-      {({ input, status }) => {
-        if (status === 'active') {
-          return <input type="text" {...input} />
-        }
-        return <>{input.value}</>
-      }}
-    </BlockField>
   )
 }
